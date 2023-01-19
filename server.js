@@ -20,7 +20,7 @@ const Parser = require('rss-parser');
 const cron = require("node-cron");
 const hubspot = require("@hubspot/api-client");
 const hubspotClient = new hubspot.Client({
-  "accessToken": "pat-na1-8b7c6010-a5cd-4ad4-8dab-ede690437207"
+  "accessToken": "pat-na1-f1c26430-0d9d-4240-9401-79928da8be93"
 });
 
 const sort = undefined;
@@ -180,9 +180,9 @@ function replaceTable(tableIdOrName) {
     });
 }
 
-replaceTable(tableIdOrName);
+
 //This will schedule the function to run at 12:00 PM and 6:00 PM every day.
 cron.schedule("0 0 12,18 * * *", () => {
   // delete the existing HubDB table and create new one
-  //replaceTable(tableIdOrName);
+  replaceTable(tableIdOrName);
 });
