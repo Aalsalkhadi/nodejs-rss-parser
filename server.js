@@ -1,5 +1,4 @@
 /**
-
 RSS Feed Parser and HubDB table creator
 This script uses the RSS-parser module to parse an RSS feed and create a new HubDB table with the parsed data. It also creates new rows in the table with the parsed data.
 @since 1.0.0
@@ -20,7 +19,7 @@ const Parser = require('rss-parser');
 const cron = require("node-cron");
 const hubspot = require("@hubspot/api-client");
 const hubspotClient = new hubspot.Client({
-  "accessToken": "YOUR-ACCESS-TOKEN"
+  "accessToken": process.env.ACCESS_TOKEN
 });
 
 const table = {
@@ -74,11 +73,17 @@ const parser = new Parser({
     }
 });
 
-// function to create rows in HubDB table
+
+/**
+ * This function creates rows and batches them to the HubDB table.  
+ * @param {string} tableIdOrName - The ID or name of the table
+ */
 function createDraftTableRows(tableIdOrName) {
   // parse the RSS feed
   parser.parseURL('https://www.fundresearch.de/rss/rss-feed-test.xml')
       .then(feed => {
+          // create an array to store the rows to be created
+          let rows = [];
           // loop through each item in the feed
           feed.items.forEach(item => {
               // set urls for enclosure, zwoelfUhr and hot if they exists, otherwise set them to empty string
@@ -86,27 +91,33 @@ function createDraftTableRows(tableIdOrName) {
               let hot = item.hot ? "https://www.fundresearch.de/fundresearch-wGlobal/wGlobal/layout/newsletter/meist-gelesen.png" : '';
               let zwoelfUhr = item.zwoelfUhr ? "https://www.fundresearch.de/fundresearch-wGlobal/wGlobal/layout/newsletter/12h-black.png" : '';
               // create object for the new row
-              const row = {
-                  values: {
-                      "title": item.title,
-                      "description": item.content,
-                      "enclosure": enclosure,
-                      "hot": hot,
-                      "zwoelfuhr": zwoelfUhr,
-                      "pubdate": item.pubDate
-                  }
+              let row = {
+                values: {
+                  "title": item.title,
+                  "description": item.content,
+                  "enclosure": enclosure,
+                  "hot": hot,
+                  "zwoelfuhr": zwoelfUhr,
+                  "pubdate": item.pubDate
+                }
               };
-              // create a new row in the table using the hubspot api
-              new Promise((resolve, reject) => {
-                      hubspotClient.cms.hubdb.rowsApi.createTableRow(tableIdOrName, row)
-                        .then((apiResponse) => {  
-                          resolve(apiResponse);
-                        })
-                        .catch(err => reject(err))
-                  })
-                  .then(apiResponse => console.info(JSON.stringify(apiResponse.body, null, 2)))
-                  .catch(err => console.error(err));
+
+              // push the row object to the rows array
+              rows.push(row);
           });
+
+        // create multiple rows in the table using the hubspot batch API
+        // use the Batch API to insert the array of objects into the table
+        const BatchInputHubDbTableRowV3Request = { inputs: rows };
+        hubspotClient.cms.hubdb.rowsBatchApi.batchCreateDraftTableRows(tableIdOrName, BatchInputHubDbTableRowV3Request)
+        .then((apiResponse) => {
+          console.log(JSON.stringify(apiResponse, null, 2));
+        })
+        .catch((e) => {
+          e.message === 'HTTP request failed'
+          ? console.error(JSON.stringify(e.response, null, 2))
+          : console.error(e)
+        });
       })
       .catch(err => console.error(err));
 }
@@ -128,7 +139,7 @@ function createTable(tableIdOrName) {
 // function to create a HubDB table
 function publishTable(tableIdOrName) {
   //Create the table
-  hubspotClient.cms.hubdb.tablesApi.publishDraftTable(tableIdOrName, includeForeignIds)
+  hubspotClient.cms.hubdb.tablesApi.publishDraftTable(tableIdOrName)
       .then(() => {
         // Table  has been created
         console.log(`Table ${tableIdOrName} created`);        
@@ -167,7 +178,6 @@ function replaceTable(tableIdOrName) {
         : console.error(e)
     });
 }
-
 
 //This will schedule the function to run at 12:00 PM and 6:00 PM every day.
 cron.schedule("0 0 12,18 * * *", () => {
