@@ -20,7 +20,7 @@ const Parser = require('rss-parser');
 const cron = require("node-cron");
 const hubspot = require("@hubspot/api-client");
 const hubspotClient = new hubspot.Client({
-  "accessToken": "pat-na1-f1c26430-0d9d-4240-9401-79928da8be93"
+  "accessToken": "YOUR-ACESS-TOCKEN"
 });
 
 const sort = undefined;
@@ -186,3 +186,5 @@ cron.schedule("0 0 12,18 * * *", () => {
   // delete the existing HubDB table and create new one
   replaceTable(tableIdOrName);
 });
+
+
