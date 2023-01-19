@@ -20,7 +20,7 @@ const Parser = require('rss-parser');
 const cron = require("node-cron");
 const hubspot = require("@hubspot/api-client");
 const hubspotClient = new hubspot.Client({
-  "accessToken": "pat-na1-8b7c6010-a5cd-4ad4-8dab-ede690437207"
+  "accessToken": "YOUR-ACESS-TOCKEN"
 });
 
 const sort = undefined;
