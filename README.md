@@ -5,8 +5,9 @@ This is a script that parses an RSS feed and creates a HubDB table in Hubspot wi
 
 1. Clone the repository
 `
-git clone https://github.com/userName/hubspot-rss-feed-parser
+git clone https://github.com/Aalsalkhadi/nodejs-rss-parser
 `
+
 
 
 2. Install the required packages by running
